@@ -39,7 +39,6 @@ def run():
                 othello_view.failed_put_msg(game, rcv)
             if error_code == ErrorCodeTryPut.GAME_END:
                 othello_view.max_mistake_failed_put_msg(game)
-                othello_view.win_msg(game)
                 othello_view.continue_msg()
                 rcv = input()
                 if _will_continue(rcv):
