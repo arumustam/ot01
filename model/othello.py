@@ -1,61 +1,38 @@
-WHITE = 1
-SPACE = 0
-BLACK = -1
+class CellState:
+    WHITE = 1
+    SPACE = 0
+    BLACK = -1
 
 SUCCESSFUL = 1
 FAILED = 0
 
 class OneDivOthello(object):
-    def __init__(self, size=16):
-        self.size = size
-        self.board = [SPACE for _ in range(self.size)]
-        self.current_move = WHITE
+    def __init__(self, size=16, max_mistake=3):
+        self.SIZE = size
+        self.MAX_MISTAKE = max_mistake
+        self.board = [CellState.SPACE for _ in range(self.SIZE)]
+        self.cnt_mistake = 0
+        self.current_move = CellState.WHITE
         self.n_white = 0
         self.n_black = 0
-
-    def get_board(self):
-        return self.board[:]
-
-    def get_current_move(self):
-        return self.current_move
-
-    def reset(self):
-        for i_board in range(self.size):
-            self.board[i_board] = SPACE
-        self.current_move = WHITE
-        self.n_white = 0
-        self.n_black = 0
-
-    def put(self, i_board):
-        if self.board[i_board] == SPACE:
-            self.board[i_board] = self.current_move
-            return SUCCESSFUL
-        else:
-            return FAILED
+        self.winner = None
 
     def _count(self):
         self.n_white = 0
         self.n_black = 0
         for dat in self.board:
-            if dat == WHITE:
+            if dat == CellState.WHITE:
                 self.n_white += 1
-            if dat == BLACK:
+            if dat == CellState.BLACK:
                 self.n_black += 1
 
-    def who_is_winner(self):
-        if self.n_white > self.n_black:
-            return WHITE
-        if self.n_white < self.n_black:
-            return BLACK
-
-    def reverse(self, put_i):
-        # ***** reverse *****
+    def _reverse(self, put_i):
         left_i = None
         for i_board in range(put_i - 1, -1, -1):
             if self.board[i_board] == self.current_move:
                 left_i = i_board
                 break
-            if self.board[i_board] == SPACE:
+            if self.board[i_board] == CellState.SPACE:
                 break
 
         if left_i is not None:
@@ -63,11 +40,11 @@ class OneDivOthello(object):
                 self.board[i_board] *= -1
 
         right_i = None
-        for i_board in range(put_i + 1, self.size):
+        for i_board in range(put_i + 1, self.SIZE):
             if self.board[i_board] == self.current_move:
                 right_i = i_board
                 break
-            if self.board[i_board] == SPACE:
+            if self.board[i_board] == CellState.SPACE:
                 break
 
         if right_i is not None:
@@ -77,9 +54,53 @@ class OneDivOthello(object):
         self._count()
         self.current_move *= -1
 
-    def check_full(self):
-        # ***** is full? *****
-        if SPACE not in self.board:
+    def can_put(self, i_board):
+        if self.board[i_board] == CellState.SPACE:
+            self.cnt_mistake = 0
+            return True
+        else:
+            self.cnt_mistake += 1
+            return False
+
+    def put(self, i_board):
+        self.board[i_board] = self.current_move
+        self._reverse(i_board)
+
+    def get_board(self):
+        return self.board[:]
+
+    def get_winner(self):
+        return self.winner
+
+    def get_current_move(self):
+        return self.current_move
+
+    def reset(self):
+        for i_board in range(self.SIZE):
+            self.board[i_board] = CellState.SPACE
+        self.current_move = CellState.WHITE
+        self.n_white = 0
+        self.n_black = 0
+        self.cnt_mistake = 0
+        self.winner = None
+
+    def dose_arrive_max_mistake(self):
+        if self.cnt_mistake == self.MAX_MISTAKE:
+            self.winner = self.current_move * -1
+            return True
+        else:
+            return False
+
+    def judge_winner(self):
+        if self.n_white > self.n_black:
+            self.winner = CellState.WHITE
+        if self.n_white == self.n_black:
+            self.winner = None
+        if self.n_white < self.n_black:
+            self.winner =  CellState.BLACK
+
+    def is_filled_board(self):
+        if CellState.SPACE not in self.board:
             return True
         else:
             return False

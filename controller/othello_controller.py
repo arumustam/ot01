@@ -1,68 +1,59 @@
 import sys
+import re
+
 sys.path.append('..')
 
-from model.othello import OneDivOthello, WHITE, BLACK, SUCCESSFUL
+from model.othello import OneDivOthello
 from view import othello_view
 
-MAX_MISS_TIMES = 3
+def _will_continue(rcv):
+    if rcv in ('n', 'N'):
+        return False
+    else:
+        return True
 
-def _will_continue(game):
+def _input_possition(game):
+    size = len(game.get_board())
     while 1:
-        othello_view.continue_msg()
+        othello_view.put_msg(game)
         rcv = input()
-        if rcv in ('y', 'Y'):
+        if re.match('[0-9]+', rcv) and 1 <= int(rcv) <= size:
             break
-        elif rcv in ('n', 'N'):
-            othello_view.goodbye_msg()
-            sys.exit()
         else:
             othello_view.invalid_input_msg()
-    game.reset()
+    return int(rcv)
+
+# TODO:putをさらにカプセル化したメソッドtry_putをつくる
 
 def run():
     game = OneDivOthello()
-
-    # **** main loop ****
     while 1:
-        board = game.get_board()
-        othello_view.print_board(board)
-
-        cnt_failed_putting = 0
+        othello_view.print_board(game)
         while 1:
-            current_move = game.get_current_move()
-            is_invalid = True
-            while is_invalid:
-                othello_view.put_msg(current_move)
-                try:
-                    rcv = int(input()) - 1
-                    assert 0 <= rcv < len(board)
-                except:
-                    othello_view.invalid_input_msg()
-                else:
-                    is_invalid = False
-            if game.put(rcv) == SUCCESSFUL:
+            rcv = _input_possition(game)
+            if game.can_put(rcv-1):
+                game.put(rcv-1)
                 break
             else:
-                cnt_failed_putting += 1
-                if cnt_failed_putting == MAX_MISS_TIMES:
-                    othello_view.three_times_failed_put_msg()
-                    othello_view.print_board(board)
-                    if current_move == WHITE:
-                        othello_view.win_msg(BLACK)
+                othello_view.failed_put_msg(game, rcv-1)
+                if game.dose_arrive_max_mistake():
+                    othello_view.max_mistake_failed_put_msg(game)
+                    othello_view.continue_msg()
+                    rcv = input()
+                    if _will_continue(rcv):
+                        game.reset()
+                        break
                     else:
-                        othello_view.win_msg(WHITE)
-                    _will_continue(game)
-                    break
-                else:
-                    othello_view.failed_put_msg(board[rcv])
+                        othello_view.goodbye_msg()
+                        sys.exit(0)
 
-        if cnt_failed_putting < MAX_MISS_TIMES:
-            game.reverse(rcv)
-            if game.check_full():
-                winner = game.who_is_winner()
-                if winner in (WHITE, BLACK):
-                    othello_view.print_board(game.get_board())
-                    othello_view.win_msg(winner)
-                else:
-                    othello_view.draw_msg()
-                _will_continue(game)
+        if game.is_filled_board():
+            game.judge_winner()
+            othello_view.win_msg(game)
+            othello_view.continue_msg()
+            rcv = input()
+            if _will_continue(rcv):
+                game.reset()
+            else:
+                othello_view.goodbye_msg()
+                sys.exit(0)
