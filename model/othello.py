@@ -3,8 +3,12 @@ class CellState:
     SPACE = 0
     BLACK = -1
 
-SUCCESSFUL = 1
-FAILED = 0
+
+class ErrorCodeTryPut:
+    SUCCESSFUL = 0
+    FAILED = 1
+    GAME_END = 2
+
 
 class OneDivOthello(object):
     def __init__(self, size=16, max_mistake=3):
@@ -54,17 +58,19 @@ class OneDivOthello(object):
         self._count()
         self.current_move *= -1
 
-    def can_put(self, i_board):
+    def try_put(self, i_board):
         if self.board[i_board] == CellState.SPACE:
             self.cnt_mistake = 0
-            return True
+            self.board[i_board] = self.current_move
+            self._reverse(i_board)
+            return ErrorCodeTryPut.SUCCESSFUL
         else:
             self.cnt_mistake += 1
-            return False
-
-    def put(self, i_board):
-        self.board[i_board] = self.current_move
-        self._reverse(i_board)
+            if self.cnt_mistake == self.MAX_MISTAKE:
+                self.winner = self.current_move * -1
+                return ErrorCodeTryPut.GAME_END
+            else:
+                return ErrorCodeTryPut.FAILED
 
     def get_board(self):
         return self.board[:]
@@ -84,20 +90,13 @@ class OneDivOthello(object):
         self.cnt_mistake = 0
         self.winner = None
 
-    def dose_arrive_max_mistake(self):
-        if self.cnt_mistake == self.MAX_MISTAKE:
-            self.winner = self.current_move * -1
-            return True
-        else:
-            return False
-
     def judge_winner(self):
         if self.n_white > self.n_black:
             self.winner = CellState.WHITE
         if self.n_white == self.n_black:
             self.winner = None
         if self.n_white < self.n_black:
-            self.winner =  CellState.BLACK
+            self.winner = CellState.BLACK
 
     def is_filled_board(self):
         if CellState.SPACE not in self.board:
