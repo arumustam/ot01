@@ -28,7 +28,7 @@ def _input_possition(game):
             break
         else:
             othello_view.invalid_input_msg()
-    return int(rcv)
+    return int(rcv) - 1
 
 
 def run():
@@ -37,7 +37,7 @@ def run():
         othello_view.print_board(game)
         while 1:
             rcv = _input_possition(game)
-            error_code = game.try_put(rcv - 1)
+            error_code = game.try_put(rcv)
             if error_code == ErrorCodeTryPut.SUCCESSFUL:
                 break
             if error_code == ErrorCodeTryPut.FAILED:
