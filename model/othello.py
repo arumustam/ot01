@@ -58,6 +58,15 @@ class OneDivOthello(object):
         self._count()
         self.current_move *= -1
 
+    def _judge_winner(self):
+        if self.n_white > self.n_black:
+            self.winner = CellState.WHITE
+        if self.n_white == self.n_black:
+            self.winner = None
+        if self.n_white < self.n_black:
+            self.winner = CellState.BLACK
+
+
     def try_put(self, i_board):
         if self.board[i_board] == CellState.SPACE:
             self.cnt_mistake = 0
@@ -90,16 +99,9 @@ class OneDivOthello(object):
         self.cnt_mistake = 0
         self.winner = None
 
-    def judge_winner(self):
-        if self.n_white > self.n_black:
-            self.winner = CellState.WHITE
-        if self.n_white == self.n_black:
-            self.winner = None
-        if self.n_white < self.n_black:
-            self.winner = CellState.BLACK
-
     def is_filled_board(self):
         if CellState.SPACE not in self.board:
+            self._judge_winner()
             return True
         else:
             return False

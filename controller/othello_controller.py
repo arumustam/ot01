@@ -7,11 +7,16 @@ from model.othello import OneDivOthello, ErrorCodeTryPut
 from view import othello_view
 
 
-def _will_continue(rcv):
-    if rcv in ('n', 'N'):
-        return False
-    else:
-        return True
+def _will_continue():
+    while 1:
+        othello_view.continue_msg()
+        rcv = input()
+        if rcv in ('y', 'Y'):
+            return True
+        elif rcv in ('n', 'N'):
+            return False
+        else:
+            othello_view.invalid_input_msg()
 
 
 def _input_possition(game):
@@ -39,9 +44,7 @@ def run():
                 othello_view.failed_put_msg(game, rcv)
             if error_code == ErrorCodeTryPut.GAME_END:
                 othello_view.max_mistake_failed_put_msg(game)
-                othello_view.continue_msg()
-                rcv = input()
-                if _will_continue(rcv):
+                if _will_continue():
                     game.reset()
                     break
                 else:
@@ -49,11 +52,8 @@ def run():
                     sys.exit(0)
 
         if game.is_filled_board():
-            game.judge_winner()
             othello_view.win_msg(game)
-            othello_view.continue_msg()
-            rcv = input()
-            if _will_continue(rcv):
+            if _will_continue():
                 game.reset()
             else:
                 othello_view.goodbye_msg()
